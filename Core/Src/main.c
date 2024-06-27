@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "ucos_ii.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -36,7 +36,7 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+#define COMMON_STK_SIZE 256
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -49,12 +49,15 @@
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 /* USER CODE BEGIN PFP */
-
+void init_task(void *ppdata);
+void led_task(void *ppdata);
+void button_task(void *ppdata);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+OS_STK init_task_stk[COMMON_STK_SIZE];
+OS_STK led_task_stk[COMMON_STK_SIZE];
 /* USER CODE END 0 */
 
 /**
@@ -65,7 +68,9 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+  OSInit();
+  OSTaskCreate(init_task,NULL,&init_task_stk[COMMON_STK_SIZE-1],5);
+  OSStart();
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -170,7 +175,47 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void init_task(void *ppdata)
+{
 
+  // MX_TIM2_Init();
+  // MX_SPI1_Init();  
+  // HAL_TIM_Base_Start_IT(&htim2);
+  // printf("%s\n\r",__FUNCTION__);
+  HAL_Init();
+  SystemClock_Config();
+  MX_GPIO_Init();  
+  
+  OSTaskCreate(led_task,NULL,&led_task_stk[COMMON_STK_SIZE-1],6);
+  // OSTaskCreate(&button_task,NULL,button_task_stk,7);
+  OSTaskDel(OS_PRIO_SELF);  
+}
+
+void led_task(void *ppdata)
+{
+
+    // printf("%s\n\r",__FUNCTION__);
+    for(;;)
+    {   
+      HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_1);
+      OSTimeDly(20);
+    }
+}
+
+void button_task(void *ppdata)
+{
+    for(;;)
+    {
+        if(GPIO_PIN_RESET == HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_2))
+        {
+            OSTimeDly(20);
+            if(GPIO_PIN_RESET == HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_2))
+            {
+              // printf("%s\n\r",__FUNCTION__);
+            }
+        }        
+    }
+}
 /* USER CODE END 4 */
 
 /**
