@@ -1,0 +1,3 @@
+[submodule "Ucosii"]
+	path = Ucosii
+	url = https://github.com/xiaoshan1234/ucosii.git
